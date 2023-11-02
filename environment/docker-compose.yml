@@ -1,0 +1,93 @@
+version: '3.7'
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.6
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_ENABLE_AUTH: "yes"
+      ZOO_SERVER_USERS: kafka
+      ZOO_SERVER_PASSWORDS: 123456@
+      ZOO_CLIENT_USER: kafka
+      ZOO_CLIENT_PASSWORD: 123456@
+    networks:
+      - acmenw
+    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:2.8.1
+    container_name: kafka
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      BITNAMI_DEBUG: "yes"
+      ALLOW_PLAINTEXT_LISTENER: "no"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ENABLE_KRAFT: "no"
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: INTERNAL://:9092,CLIENT://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,CLIENT://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: CLIENT
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,CLIENT:SASL_PLAINTEXT
+      KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_CLIENT_USERS: kafka
+      KAFKA_CLIENT_PASSWORDS: 123456@
+      KAFKA_INTER_BROKER_USER: kafka
+      KAFKA_INTER_BROKER_PASSWORD: 123456@
+      KAFKA_ZOOKEEPER_PROTOCOL: SASL
+      KAFKA_ZOOKEEPER_USER: kafka
+      KAFKA_ZOOKEEPER_PASSWORD: 123456@
+    networks:
+      - acmenw
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafkaui
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: PLAIN
+      KAFKA_CLUSTERS_0_PROPERTIES_CLIENT_DNS_LOOKUP: use_all_dns_ips
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='123456@';"
+      KAFKA_CLUSTERS_0_DISABLELOGDIRSCOLLECTION: "true"
+    networks:
+      - acmenw
+    depends_on:
+      - zookeeper
+      - kafka
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:3.7
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:3.2
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+networks:
+  acmenw:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

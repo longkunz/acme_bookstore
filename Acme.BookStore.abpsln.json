@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "Acme.BookStore": {
+      "path": "Acme.BookStore.abpmdl.json"
+    }
+  }
+}
