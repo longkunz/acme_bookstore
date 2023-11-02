@@ -32,7 +32,6 @@ namespace Acme.BookStore;
     typeof(BookStoreEntityFrameworkCoreModule),
     typeof(BookStoreHttpApiModule),
     typeof(AbpAutofacModule),
-    typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpEntityFrameworkCoreSqlServerModule),
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpSwashbuckleModule)
@@ -89,17 +88,17 @@ public class BookStoreHttpApiHostModule : AbpModule
         //        options.Audience = "BookStore";
         //    });
 
-        Configure<AbpDistributedCacheOptions>(options =>
-        {
-            options.KeyPrefix = "BookStore:";
-        });
+        //Configure<AbpDistributedCacheOptions>(options =>
+        //{
+        //    options.KeyPrefix = "BookStore:";
+        //});
 
-        var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("BookStore");
-        if (!hostingEnvironment.IsDevelopment())
-        {
-            var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
-            dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "BookStore-Protection-Keys");
-        }
+        //var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("BookStore");
+        //if (!hostingEnvironment.IsDevelopment())
+        //{
+        //    var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
+        //    dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "BookStore-Protection-Keys");
+        //}
 
         context.Services.AddCors(options =>
         {

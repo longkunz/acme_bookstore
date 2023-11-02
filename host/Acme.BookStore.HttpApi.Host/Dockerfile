@@ -1,18 +1,9 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:7.0-bullseye-slim AS base
-WORKDIR /app
-EXPOSE 80
-
-FROM mcr.microsoft.com/dotnet/core/sdk:7.0 AS build
-WORKDIR /src
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 COPY . .
-WORKDIR /src/templates/service/host/Acme.BookStore.HttpApi.Host
-RUN dotnet restore -nowarn:msb3202,nu1503
-RUN dotnet build --no-restore -c Release -o /app
+COPY NuGet.Config ./
+RUN dotnet publish "/host/Acme.BookStore.HttpApi.Host/Acme.BookStore.HttpApi.Host.csproj" -c Release -o /app/publish
 
-FROM build AS publish
-RUN dotnet publish --no-restore -c Release -o /app
-
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
 WORKDIR /app
-COPY --from=publish /app .
+COPY --from=build /app/publish /app
 ENTRYPOINT ["dotnet", "Acme.BookStore.HttpApi.Host.dll"]
